@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>A Case for Properties</title>
+    <meta name="description" content="An analysis of properties in programming languages.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+    <script src="https://use.fontawesome.com/releases/v5.15.1/js/all.js"></script>
+</head>
+<body>
+    <section class="section">
+        <div class="container" style="max-width: 768px">
+            <div class="level" style="margin: 0">
+                <div class="level-left">
+                    <div class="level-item">
+                        <img src="../images/logo.png" alt="Logo" width="24" height="24" style="margin-right: 8px">
+                        <nav class="breadcrumb has-bullet-separator" style="margin: 0; display: inline-block" aria-label="breadcrumbs">
+                            <ul>
+                                <li><a href="https://willbanders.dev">WillBAnders</a></li>
+                                <li><a href="../">Blog</a></li>
+                                <li class="is-active"><a href="#" aria-current="page">A Case for Properties</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+                <div class="level-right" style="margin-top: 8px">
+                    <div class="level-item">
+                        <a class="button" href="https://github.com/WillBAnders">
+                            <span class="icon is-medium">
+                                <i class="fab fa-lg fa-github"></i>
+                            </span>
+                            <span>GitHub</span>
+                        </a>
+                        &nbsp;
+                        <a class="button" href="https://discord.gg/gm96xd8">
+                            <span class="icon is-medium">
+                                <i class="fab fa-lg fa-discord"></i>
+                            </span>
+                            <span>Discord</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="dropdown-divider" style="margin-bottom: 16px"></div>
+            <article class="content">
+                <div class="level">
+                    <div class="level-left">
+                        <h1 id="a-case-for-properties" class="level-item title" style="margin: 0">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#a-case-for-properties">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>A Case for Properties</span>
+                        </h1>
+                    </div>
+                    <div class="level-right" style="margin: 0">
+                        <div class="level-item">
+                            <div class="is-hidden-mobile has-text-right" style="display: block; line-height: 1.25rem;">
+                                <span class="is-size-5">November 15, 2020</span><br>
+                                <span class="is-size-6"><em>~12m read time</em></span>
+                            </div>
+                            <div class="is-hidden-tablet has-text-centered" style="display: block; margin-top: 0.5rem; line-height: 1.25rem;">
+                                <span class="is-size-5">November 15, 2020</span><br>
+                                <span class="is-size-6"><em>~12m read time</em></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p>Properties are a really nice feature of modern languages, and I've recently
+                    gotten attached to them in Kotlin. For a while
+                    I wasn't comfortable with the idea of 'fields' performing arbitrary computation,
+                    but having used them for a few months now I'm really enjoying the simplicity -
+                    <em>especially</em> when moving back to Java!</p>
+                <p>Having given it some thought, I wanted to lay out a case in support of
+                    properties which highlights their benefits over directly accessing fields (which
+                    is mostly about getters/setters, but nonetheless), and how we can establish some
+                    guidelines on when properties should not be used to avoid the issue of
+                    arbitrary computation causing side effects or other unexpected behavior.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h2 id="what-is-a-property" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#what-is-a-property">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.2rem"></i>
+                                </a>
+                            </span>
+                            <span>What <em>is</em> a property?</span>
+                        </h2>
+                    </div>
+                </div>
+                <p>In short, a property is <abbr title="Features which aid readability or ease of use but do not impact semantics.">syntax sugar</abbr> for getter/setter methods that look
+                    like fields. Instead of having to use the methods <code class="has-text-dark">item.getQuantity()</code> and
+                    <code class="has-text-dark">item.setQuantity()</code>, we can access the property <code class="has-text-dark">item.quantity</code> and set it
+                    using <code class="has-text-dark">item.quantity = 1</code>, exactly like a field. The compiler transforms property
+                    access and assignment to use the appropriate getters/setters (hence, syntax sugar).
+                </p>
+                <p>The most noteworthy consequence of this is, in my opinion, allowing <em>validation
+                    on assigment</em>. For example, <code class="has-text-dark">item.quantity</code> may be defined as follows (in Kotlin):</p>
+<pre><span class="has-text-link">class</span> <span class="has-text-danger">Item</span> {
+    <span class="has-text-link">var</span> <span style="color: hsl(283, 39%, 53%)">quantity</span>: <span class="has-text-danger">Int</span> = <span class="has-text-info">0</span>
+        <span class="has-text-link">set</span>(value) {
+            require(value &gt;= <span class="has-text-info">0</span>) <span class="has-text-grey">//throws if negative</span>
+            <span class="has-text-link">field</span> = value
+        }
+}
+</pre>
+<pre class="notification"><span class="icon is-small has-text-success" style="position: absolute; top: 1rem; right: 1rem">
+  <i class="fas fa-2x fa-play-circle" style="cursor: pointer" onclick="openDemo('item-property', this)"></i>
+</span>item.<span style="color: hsl(283, 39%, 53%)">quantity</span> = <span class="has-text-info">-10</span>;
+<div id="demo/item-property/output" class="is-hidden">
+<div class="notification is-danger is-light"><button class="delete" onclick="closeDemo('item-property')"></button><pre class="has-background-danger-light" style="padding: 0">java.lang.IllegalArgumentException: Failed requirement.
+    at Item.setQuantity(Item.kt:4) <span class="has-text-grey">//require(value &gt;= 0)</span>
+</pre></div></div></pre>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h2 id="whats-the-benefit" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#whats-the-benefit">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>What's the benefit?</span>
+                        </h2>
+                    </div>
+                </div>
+                <p>The largest benefit of properties is replacing field use, which has a massive
+                    amount of drawbacks, with methods instead. In languages like C++ and Java that
+                    don't have properties, the best practice is to keep all fields private and
+                    manually create getters and setters. More modern languages, like C# and Kotlin,
+                    use properties for this instead which can do that automatically.</p>
+                <p>Most of the following points are also benefits of using getters/setters over
+                    fields, and then properties step in to provide the extra bit of syntax sugar icing on
+                    the cake.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="api-safety-and-compatibility" class="level-item title">
+                            <span class="icon is-small" style="margin-right: 0.25rem">
+                                <a href="#api-safety-and-compatibility">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>API Safety and Compatibility</span>
+                        </h3>
+                    </div>
+                </div>
+                <ol style="margin-top: 0">
+                    <li>Property getters/setters can have different <abbr title="public/private and friends">access modifiers</abbr>, allowing for
+                        fields which are read-only for external use but still mutable within the class.
+                        <ul style="margin-top: 0">
+                            <li>Example: In Kotlin, <code class="has-text-dark">val&nbsp;counter&nbsp;=&nbsp;0&nbsp;private&nbsp;set</code>
+                                defines a <code class="has-text-dark">counter</code> field that can be publicly accessed but not modified (unless within the class).
+                            </li>
+                        </ul>
+                    </li>
+                    <li>Getters/setters can be used to maintain <abbr title="A (mathematical) property which is expected to hold true in all cases&#10;&#10;For example, a unit vector (3D) has the invariant x² + y² + z² == 1.">invariants</abbr> and perform other
+                        validation work, such as <code class="has-text-dark">quantity&nbsp;&gt;=&nbsp;0</code> in the opening example.
+                    </li>
+                    <li>Since getters/setters are methods, the implementation can be changed without
+                        breaking either <abbr title="Application Programming Interface&#10;&#10;The interface of the *source* code">API</abbr> or <abbr title="Application Binary Interface&#10;&#10;The interface of the *compiled* code">ABI</abbr> compatibility.
+                        <ul style="margin-top: 0">
+                            <li>Example: A <code class="has-text-dark">Vector</code> class could have <code class="has-text-dark">x/y/z</code> properties, but
+                                change the implementation to use a component array <code class="has-text-dark">[x, y, z]</code> instead without issue.
+                            </li>
+                            <li>Additionally, getters/setters can be inlined during optimization to speed up performance at the cost of ABI compatibility.
+                            </li>
+                        </ul>
+                    </li>
+                </ol>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="polymorphic-behavior" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#polymorphic-behavior">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Polymorphic Behavior</span>
+                        </h3>
+                    </div>
+                </div>
+                <ol style="margin-top: 0">
+                    <li>Properties can be used in interfaces since they're backed by methods, while fields require getters/setters to be defined for them. Notably, these getters/setters would still need to have fields defined in the implementing class to handle their values, while a property can handle that automatically.
+                    </li>
+                    <li>Properties can be used for methods which often behave like fields, but
+                        cannot be implemented with one due to subtypes requiring computation or
+                        other restrictions.
+                        <ul style="margin-top: 0">
+                            <li>Example: <code class="has-text-dark">List#size()</code> generally doesn't need computation and returns the
+                                value of a field, but some implementations (such as a <abbr title="A form of linked list which doesn't track its size, comes from Lisp&#10;&#10;Honestly google it, this text box can't do it justice">cons list</abbr>) might.
+                            </li>
+                            <li>Whether <code class="has-text-dark">List#size()</code> should be a property is certainly debatable, but with how frequently collections are used I think it's almost a necessity.
+                            </li>
+                        </ul>
+                    </li>
+                </ol>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="ease-of-use" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#ease-of-use">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Ease of Use</span>
+                        </h3>
+                    </div>
+                </div>
+                <ol style="margin-top: 0;">
+                    <li>Properties are a <em>single unit</em>. Getters/setters are located in the same
+                        location in the source code as the property declaration, making it easier to
+                        fully understand a field as opposed to having them defined in separate locations.
+                    </li>
+                    <li>Properties almost always have syntax sugar for providing default
+                        implementations of <code class="has-text-dark">get/set</code> (if it's not already done automatically). In Kotlin, <code class="has-text-dark">val property</code> provides a default
+                        getter while <code class="has-text-dark">var property</code> provides both a getter and setter.
+                    </li>
+                    <li>Debugging properties is possible without a dedicated debugger by using
+                        getters/setters. This may be minor for large languages, but if your language
+                        doesn't have an IDE or still in development this is <em>extremely</em> useful.
+                    </li>
+                    <li>Readability is often increased, albeit debatable. I personally find <code class="has-text-dark">item.quantity&nbsp;=&nbsp;1</code> to
+                        be more readable than <code class="has-text-dark">item.setQuantity(1)</code>, especially in large chains.
+                    </li>
+                    <li>Generally, properties imply 'simple' behavior, like fields, as opposed to complex
+                        computation that some methods may perform. We'll talk about this in detail soon.
+                    </li>
+                </ol>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h2 id="so-what-are-the-downsides" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#so-what-are-the-downsides">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>So what are the downsides?</span>
+                        </h2>
+                    </div>
+                </div>
+                <p>I think there are two notable downsides to having properties. First, the
+                    performance difference between field access and method calls can be significant,
+                    especially in low level languages. Second, field access has clear, well-defined
+                    behavior while a method call could effectively do anything, thus making it
+                    harder to reason about code. Let's dig in to both of these.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="problem-1-performance" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#problem-1-performance">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Problem 1: Performance</span>
+                        </h3>
+                    </div>
+                </div>
+                <p>Field access is almost always language primitive, and is therefore faster than
+                    doing the work of a method call (which then has to access <em>something</em> anyways).</p>
+                <p>That said, compiler optimizations like <abbr title="Replacing a method call with it's implementation">inlining</abbr> can easily resolve this for
+                    simple properties. In more complex cases, this is actually where properties are
+                    most useful - a field itself wasn't sufficient, so the alternative would have
+                    been a method call or sacrificing validation anyways.</p>
+                <p>In low level languages where memory layout is often important, knowing a field
+                    access corresponds to a memory lookup (and not arbitrary computation) can be
+                    important. In higher level languages, particularly Object Oriented ones that
+                    often encapsulate fields behind methods anyways, I don't believe this
+                    distinction is as necessary.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="problem-2-arbitrary-computation" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#problem-2-arbitrary-computation">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Problem 2: Arbitrary Computation</span>
+                        </h3>
+                    </div>
+                </div>
+                <p>Finally, we've made our way to what I believe is the core issue: since
+                    properties can perform arbitrary computation, it is unclear what potential
+                    behavior getting/setting a property may have. The extreme example here, of
+                    course, is deleting the entire file system. Fields on the other hand have
+                    clearly defined behavior - get or set the value, nothing more.</p>
+                <p>However, these type of assumptions are not unique to properties. We apply the
+                    same assumptions to methods (and honestly everything) as well. I often presume
+                    that <code class="has-text-dark">getX()</code> and <code class="has-text-dark">setX(x)</code> have 'simple' behavior, but they could use lazy
+                    initialization, have unexpected validation checks, or cause side-effects and
+                    other unexpected behavior
+                    like a database <code class="has-text-dark">getConnection()</code>. Naming is one of the two hard problems in computer science,
+                    likely because we carry assumptions with us that may not always fit.</p>
+                <p>That said, these assumptions still have value and help us reason about code
+                    without having to memorize the API of the entire system. So, I thought
+                    about the assumptions I make about properties and what guidelines could be put
+                    in place to restrict what they <em>should</em> do. I'm not confident enough
+                    to claim these as rules (yet!), and I welcome any counterexample that these
+                    guidelines do not address.</p>
+                <p>With the main issue being the potential for arbitrary computation, the first
+                    guideline is...</p>
+                <blockquote>
+                    <ol style="margin-top: 0" start="1">
+                        <li>Properties should be pure, excluding state managed by the
+                            property itself. This is intended to allow lazy initialization and setting
+                            backing fields or delegated properties as needed, but restricts modifying
+                            unrelated state or performing other side effects.
+                        </li>
+                    </ol>
+                </blockquote>
+                <p>Next up, let's revisit <code class="has-text-dark">getConnection</code> - this method not only causes side
+                    effects but can also fail if the database is unavailable (among others). This is
+                    something I believe to be beyond a property, as it's doing computational work
+                    the caller may have to recover from (emphasis here). As such, the next guideline
+                    is...</p>
+                <blockquote>
+                    <ol style="margin-top: 0" start="2">
+                        <li>Properties should not cause errors, excluding non-recoverable
+                            errors (failure). This includes state/argument validation and potential
+                            internal errors.
+                        </li>
+                    </ol>
+                </blockquote>
+                <p>Lastly, the most controversial guideline which I think is best explained afterwards:</p>
+                <blockquote>
+                    <ol style="margin-top: 0" start="3">
+                        <li>Properties should be used for <abbr title="Effectively, average worst-case complexity.&#10;&#10;For example, hashmap lookup is amortized O(1)">amortized</abbr> constant-time operations,
+                            excluding inherited properties where the implementation can't
+                            support it. This is intended to avoid complex calculations while still
+                            allowing lazy initialization and <code class="has-text-dark has-background-grey-lighter">list.size</code> for something like a <abbr title="A form of linked list which doesn't track its size, comes from Lisp&#10;&#10;Honestly google it, this text box can't do it justice">cons list</abbr>.
+                            (though could be made amortized if cached).
+                        </li>
+                    </ol>
+                </blockquote>
+                <p>This is certainly contrived to fit these cases, but I think this is the best
+                    justification I can give right now for why <code class="has-text-dark">list.size</code> is acceptable as a
+                    property while something like <code class="has-text-dark">list.sorted()</code> probably isn't. There's likely
+                    some odd cases I haven't thought of yet, like <code class="has-text-dark">file.lines</code> being okay if it
+                    returns a sequence (lazy computation) but a list result is probably not a good choice.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h2 id="example-use-cases" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#example-use-cases">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Example Use Cases</span>
+                        </h2>
+                    </div>
+                </div>
+                <p>Keeping these guidelines in mind, I think it'd be useful to examine some example
+                    use cases of properties which I believe work really well. Both of these showcase
+                    properties being used to provide different <em>views</em> on data which can be used
+                    more effectively than through methods.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="example-rgbcolor" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#example-rgbcolor">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Example: RgbColor</span>
+                        </h3>
+                    </div>
+                </div>
+                <p>This example uses properties to work with individual red, blue, and green
+                    components in a <abbr title="A model of representing RGB colors in a single integer">RGB hex
+                    color</abbr>. These are <em>virtual</em> properties, and thus the only data being stored
+                    in memory is the hex value itself. A similar approach can be used for flags.</p>
+<pre><span class="has-text-link">data</span> <span class="has-text-link">class</span> <span class="has-text-danger">RgbColor</span>(<span class="has-text-link">var</span> <span style="color: hsl(283, 39%, 53%)">hex</span>: <span class="has-text-danger">Int</span>) {
+    <span class="has-text-link">var</span> <span style="color: hsl(283, 39%, 53%)">red</span>: <span class="has-text-danger">Int</span>
+        <span class="has-text-link">get</span>() = <span style="color: hsl(283, 39%, 53%)">hex</span>.and(<span class="has-text-info">0xFF0000</span>).shr(<span class="has-text-info">16</span>)
+        <span class="has-text-link">set</span>(value) {
+            require(value <span class="has-text-link">in</span> <span class="has-text-info">0</span>..<span class="has-text-info">255</span>)
+            <span style="color: hsl(283,39%,53%)">hex</span> = <span style="color: hsl(283,39%,53%)">hex</span>.and(<span class="has-text-info">0x00FFFF</span>).or(value.shl(<span class="has-text-info">16</span>))
+        }
+    <span class="has-text-link">var</span> <span style="color: hsl(283, 39%, 53%)">blue</span>: <span class="has-text-danger">Int</span> = ...
+    <span class="has-text-link">var</span> <span style="color: hsl(283, 39%, 53%)">green</span>: <span class="has-text-danger">Int</span> = ...
+}</pre>
+<pre class="notification"><span class="icon is-small has-text-success" style="position: absolute; top: 1rem; right: 1rem">
+  <i class="fas fa-2x fa-play-circle" style="cursor: pointer" onclick="openDemo('rgbcolor', this)"></i>
+</span><span class="has-text-link">val</span> color = <span class="has-text-danger">RgbColor</span>(<span class="has-text-info">0xFF0000</span>)
+color.<span style="color: hsl(283, 39%, 53%)">blue</span> = <span class="has-text-info">0xA5</span>
+println(color.<span style="color: hsl(283, 39%, 53%)">hex</span>.toString(<span class="has-text-info">16</span>))
+<div id="demo/rgbcolor/output" class="is-hidden">
+<div class="notification is-success is-light"><button class="delete" onclick="closeDemo('rgbcolor')"></button><pre class="has-background-success-light" style="padding: 0">0xFFA500 <span class="has-text-grey">//blue is now 0xA5</span>
+</pre></div></div></pre>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="example-map-values" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#example-map-values">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Example: Map Values</span>
+                        </h3>
+                    </div>
+                </div>
+                <p>This example takes things a step further and uses properties to return a new
+                    object. The example below uses properties twice: once to provide a view of the map's values
+                    as a <code class="has-text-dark">Collection&lt;Int&gt;</code>, and a second time to provide another
+                    view which can be used to mutate the original map.</p>
+<pre class="notification"><span class="icon is-small has-text-success" style="position: absolute; top: 1rem; right: 1rem">
+  <i class="fas fa-2x fa-play-circle" style="cursor: pointer" onclick="openDemo('map-values', this)"></i>
+</span><span class="has-text-link">val</span> map = mapOf(<span class="has-text-success-dark">"x"</span> to <span class="has-text-info">1</span>, <span class="has-text-success-dark">"y"</span> to <span class="has-text-info">2</span>, <span class="has-text-success-dark">"z"</span> to <span class="has-text-info">3</span>);
+map.<span style="color: hsl(283, 39%, 53%)">values</span>.<span style="color: hsl(283, 39%, 53%)">mutable</span>.map { <span class="has-text-link">it</span> * <span class="has-text-link">it</span> };
+println(map);
+<div id="demo/map-values/output" class="is-hidden">
+<div class="notification is-success is-light"><button class="delete" onclick="closeDemo('map-values')"></button><pre class="has-background-success-light" style="padding: 0">{x = 1, y = 4, z = 9} <span class="has-text-grey">//map is mutated</span>
+</pre></div></div></pre>
+                <blockquote>
+                    <p>For <em>some</em> reason, Kotlin's standard library doesn't do this so the code above naturally
+                        won't compile if you try it yourself. Maybe someday in <a href="https://rhovas.dev">Rhovas</a>?</p>
+                </blockquote>
+                <p>To me, the use of properties to do this with <code class="has-text-dark">map.values.mutable.map&nbsp;{&nbsp;...&nbsp;}</code> is
+                    clearer than the alternative with methods, <code class="has-text-dark">map.values().mutable().map&nbsp;{ ... }</code>,
+                    as the connection between the original map and the mutable view at the end is lost by
+                    the method calls. While Kotlin does support <code class="has-text-dark">map.mapValues</code> and related, these need to be
+                    duplicated for <code class="has-text-dark">keys</code> and <code class="has-text-dark">entries</code> and may be missing other helpful functions as well.
+                    Maybe this isn't something you should do anyways, but I think
+                    it's an interesting idea and works well enough in the above example.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h2 id="closing-thoughts" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#closing-thoughts">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Closing Thoughts...</span>
+                        </h2>
+                    </div>
+                </div>
+                <p>I really enjoy working with properties in modern languages, and I hope this
+                    provides a fair case for why they can be a good language feature when used
+                    properly (no pun intended).</p>
+                <p>In quick summary, properties offer a large number of benefits over fields
+                    with respect to correctness, semantic capability, and usability with relatively
+                    few downsides in turn. The guidelines we established to avoid
+                    unexpected behavior with properties are:</p>
+                <blockquote>
+                    <ol style="margin-top: 0">
+                        <li>Properties should be pure, allowing for changes to backing state.</li>
+                        <li>Properties should not throw errors, allowing for unrecoverable failures.</li>
+                        <li>Properties should have ~linear time complexity, allowing for rare cases.</li>
+                    </ol>
+                </blockquote>
+                <p>Feel free to reach out with questions or comments, and I'd love to hear feedback
+                    on the above guidelines and whether this post has impacted your opinion on properties.</p>
+                <ul>
+                    <li>Email: <code class="has-text-dark">WillBAnders@gmail.com</code></li>
+                    <li><a href="https://discord.gg/gm96xd8" rel="nofollow">Discord</a>: Tag me in the <code class="has-text-dark">#blog</code> channel!</li>
+                </ul>
+                <p style="width: 100%; text-align: center">Thanks for reading!<br> <em>~Blake Anderson</em></p>
+            </article>
+            <div class="dropdown-divider" style="margin-top: 16px"></div>
+        </div>
+    </section>
+</body>
+</html>
+<script>
+    function openDemo(id, button) {
+        button.style.setProperty("cursor", "wait");
+        setTimeout(() => {
+            button.style.setProperty("cursor", "pointer");
+            document.getElementById(`demo/${id}/output`).classList.remove("is-hidden");
+        }, 250);
+    }
+
+    function closeDemo(id) {
+        document.getElementById(`demo/${id}/output`).classList.add("is-hidden");
+    }
+</script>
