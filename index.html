@@ -61,6 +61,49 @@
             <article class="content">
                 <div class="level">
                     <div class="level-left">
+                        <h2 id="introducing-syntax-macros" class="level-item title is-size-3" style="margin: 0">
+                            <a href="./articles/introducing-syntax-macros.html">Introducing Syntax Macros</a>
+                        </h2>
+                    </div>
+                    <div class="level-right" style="margin: 0">
+                        <div class="level-item">
+                            <div class="is-hidden-mobile has-text-right" style="display: block; line-height: 1.25rem;">
+                                <span class="is-size-5">July 11, 2021</span><br>
+                                <span class="is-size-6"><em>~9m read time</em></span>
+                            </div>
+                            <div class="is-hidden-tablet has-text-centered" style="display: block; margin-top: 0.5rem; line-height: 1.25rem;">
+                                <span class="is-size-5">July 11, 2021</span><br>
+                                <span class="is-size-6"><em>~9m read time</em></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p>Domain-specific languages (DSLs) are <em>everywhere</em>; you just might not
+                    recognize it. Regex is a DSL, as is SQL and HTML. C# has <a href="https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/linq/">LINQ</a>
+                    for queries. Even React HTML templates are actually from a DSL called <a href="https://reactjs.org/docs/introducing-jsx.html">JSX</a>.</p>
+                <p>DSLs are excellent at what they do - picking the ideal language is like picking the right tool
+                    from the toolbox; not every problem needs the Python hammer. That said, there is little support
+                    for DSLs within existing languages, and we often end up throwing them into string literals
+                    hoping for the best at runtime.</p>
+                <p>Instead, I'd like to introduce a new model for implementing embedded DSLs called <em>syntax
+                    macros</em>, which allow extending the syntax of the language to support the DSL. This results
+                    in syntax like the following, where the DSL actually looks like it's own language:</p>
+                <pre><span style="color: hsl(283, 39%, 53%)">db</span>.execute(<span class="has-text-danger">#sql {</span>
+    <span class="has-text-link">SELECT</span> * <span class="has-text-link">FROM</span> <span style="color: hsl(283, 39%, 53%)">users</span>
+    <span class="has-text-link">WHERE</span> <span style="color: hsl(283, 39%, 53%)">name</span> = <span class="has-text-danger">${</span><span style="color: hsl(283, 39%, 53%)">name</span><span class="has-text-danger">}</span>
+<span class="has-text-danger">}</span>);
+</pre>
+                <p>This article is a more approachable summary of my honors thesis that highlights
+                    key ideas and elaborates on points that presumed a background in programming
+                    languages. The full thesis is available through the <a href="(https://ufdc.ufl.edu/AA00082326/00001/citation">UF Library Catalog</a>,
+                    and I believe it's pretty straightforward as far as academic papers go.
+                </p>
+                <p style="width: 100%; text-align: center"><a href="./articles/introducing-syntax-macros.html">Continue reading...</a></p>
+            </article>
+            <div class="dropdown-divider" style="margin-bottom: 16px"></div>
+            <article class="content">
+                <div class="level">
+                    <div class="level-left">
                         <h2 id="a-case-for-properties" class="level-item title is-size-3" style="margin: 0">
                             <a href="./articles/a-case-for-properties.html">A Case for Properties</a>
                         </h2>

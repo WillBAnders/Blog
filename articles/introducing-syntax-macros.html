@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Introducing Syntax Macros</title>
+    <meta name="description" content="A new model for implementing embedded DSLs.">
+    <link rel="icon" type="image/png" href="../images/logo.png">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+    <script src="https://use.fontawesome.com/releases/v5.15.1/js/all.js"></script>
+</head>
+<body>
+    <section class="section">
+        <div class="container" style="max-width: 768px">
+            <div class="level" style="margin: 0">
+                <div class="level-left">
+                    <div class="level-item">
+                        <img src="../images/logo.png" alt="Logo" width="24" height="24" style="margin-right: 8px">
+                        <nav class="breadcrumb has-bullet-separator" style="margin: 0; display: inline-block" aria-label="breadcrumbs">
+                            <ul>
+                                <li><a href="https://willbanders.dev">WillBAnders</a></li>
+                                <li><a href="../">Blog</a></li>
+                                <li class="is-active"><a href="#" aria-current="page">Introducing Syntax Macros</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+                <div class="level-right" style="margin-top: 8px">
+                    <div class="level-item">
+                        <a class="button" href="https://github.com/WillBAnders">
+                            <span class="icon is-medium">
+                                <i class="fab fa-lg fa-github"></i>
+                            </span>
+                            <span>GitHub</span>
+                        </a>
+                        &nbsp
+                        <a class="button" href="https://discord.gg/gm96xd8">
+                            <span class="icon is-medium">
+                                <i class="fab fa-lg fa-discord"></i>
+                            </span>
+                            <span>Discord</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="dropdown-divider" style="margin-bottom: 16px"></div>
+            <article class="content">
+                <div class="level">
+                    <div class="level-left">
+                        <h1 id="introducing-syntax-macros" class="level-item title" style="margin: 0">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#introducing-syntax-macros">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Introducing Syntax Macros</span>
+                        </h1>
+                    </div>
+                    <div class="level-right" style="margin: 0">
+                        <div class="level-item">
+                            <div class="is-hidden-mobile has-text-right" style="display: block; line-height: 1.25rem;">
+                                <span class="is-size-5">July 11, 2021</span><br>
+                                <span class="is-size-6"><em>~9m read time</em></span>
+                            </div>
+                            <div class="is-hidden-tablet has-text-centered" style="display: block; margin-top: 0.5rem; line-height: 1.25rem;">
+                                <span class="is-size-5">July 11, 2021</span><br>
+                                <span class="is-size-6"><em>~9m read time</em></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p>Domain-specific languages (DSLs) are <em>everywhere</em>; you just might not
+                    recognize it. Regex is a DSL, as is SQL and HTML. C# has <a href="https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/linq/">LINQ</a>
+                    for queries. Even React HTML templates are actually from a DSL called <a href="https://reactjs.org/docs/introducing-jsx.html">JSX</a>.</p>
+                <p>DSLs are excellent at what they do - picking the ideal language is like picking the right tool
+                    from the toolbox; not every problem needs the Python hammer. That said, there is little support
+                    for DSLs within existing languages, and we often end up throwing them into string literals
+                    hoping for the best at runtime.</p>
+                <p>Instead, I'd like to introduce a new model for implementing embedded DSLs called <em>syntax
+                    macros</em>, which allow extending the syntax of the language to support the DSL. This results
+                    in syntax like the following, where the DSL actually looks like it's own language:</p>
+<pre><span style="color: hsl(283, 39%, 53%)">db</span>.execute(<span class="has-text-danger">#sql {</span>
+    <span class="has-text-link">SELECT</span> * <span class="has-text-link">FROM</span> <span style="color: hsl(283, 39%, 53%)">users</span>
+    <span class="has-text-link">WHERE</span> <span style="color: hsl(283, 39%, 53%)">name</span> = <span class="has-text-danger">${</span><span style="color: hsl(283, 39%, 53%)">name</span><span class="has-text-danger">}</span>
+<span class="has-text-danger">}</span>);
+</pre>
+                <p>This article is a more approachable summary of my honors thesis that highlights
+                    key ideas and elaborates on points that presumed a background in programming
+                    languages. The full thesis is available through the <a href="(https://ufdc.ufl.edu/AA00082326/00001/citation">UF Library Catalog</a>,
+                    and I believe it's pretty straightforward as far as academic papers go.
+                </p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h2 id="motivation" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#motivation">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Motivation</span>
+                        </h2>
+                    </div>
+                </div>
+                <p>DSLs are often embedded within larger applications written in another language,
+                    called the <em>host language</em>. The most common method for embedding DSLs is
+                    to simply use strings, such as the following SQL query for looking up a user by
+                    their name in a database.</p>
+<pre><span style="color: hsl(283, 39%, 53%)">db</span>.execute(
+    <span class="has-text-success-dark">"SELECT * FROM users "</span> +
+    <span class="has-text-success-dark">"WHERE name = '"</span> + <span style="color: hsl(283, 39%, 53%)">name</span> + <span class="has-text-success">"'"</span>
+);
+</pre>
+                <p>However, by using string concatenation for variables this query becomes
+                    vulnerable to <a href="https://xkcd.com/327">SQL injection</a> - if <code class="has-text-dark">name</code>
+                    contained malicious SQL provided by the user, it would be executed as part of
+                    the query by the database. A common solution to this is prepared statements,
+                    which use a template and arguments to set values separate from the query itself.</p>
+<pre><span style="color: hsl(283, 39%, 53%)">stmt</span> = <span style="color: hsl(283, 39%, 53%)">db</span>.execute(
+    <span class="has-text-success-dark">"SELECT * FROM users "</span> +
+    <span class="has-text-success-dark">"WHERE name = ?"</span>
+);
+<span style="color: hsl(283, 39%, 53%)">stmt</span>.set(<span class="has-text-info">0</span>, <span style="color: hsl(283, 39%, 53%)">name</span>);
+<span style="color: hsl(283, 39%, 53%)">stmt</span>.execute();
+</pre>
+                <p>Though this does resolve the SQL injection issue, there are still some major
+                    limitations to this approach:</p>
+                <ul>
+                    <li>The query is still a string, and is thus restricted by the syntax of the
+                        host language (for example, using quotes in the DSL would require escaping).</li>
+                    <li>The separation of the query, arguments, and execution hurts readability,
+                        especially in more complex examples.</li>
+                    <li>Static analysis becomes harder, especially with ensuring the type-safety of
+                        arguments.</li>
+                </ul>
+                <p>Ideally, we would be able to write the embedded SQL in the same way we would SQL
+                    itself, plus support for static analysis and type-safe arguments. Effectively,
+                    an embedded DSL should be just that - an embedded <em>language</em>, with all
+                    the benefits that come with it.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h2 id="existing-solutions" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#existing-solutions">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Existing Solutions</span>
+                        </h2>
+                    </div>
+                </div>
+                <p>The most common approach for DSLs is to use strings, as in SQL above as well as
+                    regex. Libraries are another approach, like database ORMs or <a href="https://kotlinlang.org/docs/type-safe-builders.html">Kotlin's HTML builder</a>.</p>
+                <p>However, one of the most promising solutions that is becoming popular is custom
+                    format strings, as seen in <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#tagged_templates">JavaScript's tagged templates</a>
+                    and <a href="https://docs.scala-lang.org/overviews/core/string-interpolation.html">Scala's interpolators</a>.
+                    These transform a string with interpolated values into a function call that can
+                    process the string as the DSL and handle the values appropriately. An example of
+                    this in JavaScript is shown below using our previous SQL query.</p>
+<pre><span style="color: hsl(283, 39%, 53%)">db</span>.execute(<span class="has-text-danger">sql</span><span class="has-text-success-dark">`</span>
+    <span class="has-text-success-dark">SELECT * FROM users</span>
+    <span class="has-text-success-dark">WHERE name = </span><span class="has-text-danger">${</span><span style="color: hsl(283, 39%, 53%)">name</span><span class="has-text-danger">}</span>
+<span class="has-text-success-dark">`</span>);
+</pre>
+                <p>This method is extremely versatile and is currently the best option for DSLs
+                    (after all, they're designed for it). Even so, there are limitations - syntax is
+                    still restricted (ending quote) and static analysis isn't possible without
+                    external tooling (which might need to be created).</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h2 id="embedded-dsl-requirements" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#embedded-dsl-requirements">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Embedded DSL Requirements</span>
+                        </h2>
+                    </div>
+                </div>
+                <p>There are two key requirements needed for a solution that meets our goals.</p>
+                <ol>
+                    <li>The syntax of the DSL should not be unnecessarily restricted by the host
+                        language, such as with string literals. This means that DSLs have to be
+                        handled at the level of the parser.</li>
+                    <li>The DSL should integrate with the host language for accessing values, which
+                        is commonly used for templating or passing arguments. This works similar to
+                        string interpolation in existing languages.</li>
+                </ol>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="unrestricted-syntax" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#unrestricted-syntax">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Unrestricted Syntax</span>
+                        </h3>
+                    </div>
+                </div>
+                <p>To allow a DSL to have unrestricted syntax, we must be able to change the <abbr title="Formal rules for what syntax is or is not allowed in a language">grammar</abbr>
+                    used during the parsing process. This means that the parser must use <abbr title="Lexing is done during parsing, rather than as a separate step before parsing">lazy lexing</abbr>
+                    and be cautious of how much <abbr title="Number of upcoming tokens examined to determine the correct grammar rule">lookahead</abbr>
+                    it uses to avoid accidentally lexing the DSL using the grammar of the host
+                    language.</p>
+                <p>That's a pretty term-heavy explanation, so an example here is easiest. Consider
+                    two languages with different (and incompatible) styles for variable names:</p>
+<pre><span style="color: hsl(283, 39%, 53%)">snake_case</span> = <span class="has-text-info">0</span>; <span class="has-text-grey">//only snake_case allowed</span>
+<span class="has-text-danger">#dsl {</span>
+    <span style="color: hsl(283, 39%, 53%)">kebab-case</span> = <span class="has-text-info">1</span>; <span class="has-text-grey">//only kebab-case allowed</span>
+<span class="has-text-danger">}</span>
+<span style="color: hsl(283, 39%, 53%)">snake_case</span> = <span class="has-text-info">2</span>; <span class="has-text-grey">//only snake_case allowed (again)</span>
+</pre>
+                <p>If the parser isn't careful, it could end up lexing the <code class="has-text-dark">kebab-case</code>
+                    variable using the grammar of the <code class="has-text-dark">snake_case</code>
+                    language, which would be incorrect. Likewise, the parser needs to know when the
+                    DSL ends to avoid lexing later lines using the <code class="has-text-dark">kebab-case</code>
+                    grammar.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="host-language-access" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#host-language-access">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Host Language Access</span>
+                        </h3>
+                    </div>
+                </div>
+                <p>The second problem is ensuring that the DSL can access values from the host
+                    language, which can be done using interpolation, like with <code class="has-text-dark">`name = ${name}`</code>
+                    in JavaScript. The catch here is that interpolation needs to return parsing to
+                    the host language so it uses the same grammar as the values it's trying to
+                    access. For example, continuing our variable names scenario from above:</p>
+<pre><span style="color: hsl(283, 39%, 53%)">snake_case</span> = <span class="has-text-info">0</span>;
+<span class="has-text-danger">#dsl {</span>
+    <span style="color: hsl(283, 39%, 53%)">kebab-case</span> = <span class="has-text-danger">${</span><span style="color: hsl(283, 39%, 53%)">snake_case</span><span class="has-text-danger">}</span>; <span class="has-text-grey">//kebab-case in DSL, snake_case in interpolation</span>
+<span class="has-text-danger">}</span>
+</pre>
+                <p>Since <code class="has-text-dark">snake_case</code> is not a valid variable
+                    within the <code class="has-text-dark">kebab-case</code> DSL, parsing has to
+                    switch back to the <code class="has-text-dark">snake_case</code> language to
+                    handle the variable properly.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h2 id="syntax-macro-model" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#syntax-macro-model">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Syntax Macro Model</span>
+                        </h2>
+                    </div>
+                </div>
+                <p>Syntax macros are a new model for implementing embedded DSLs that meets both of
+                    these requirements. Unlike regular macros which work with the existing AST,
+                    syntax macros are applied during parsing to use the proper grammar for the DSL.
+                    Furthermore, syntax macros use a standardized system of interpolation to access
+                    values within the host language.</p>
+                <p>In <a href="https://rhovas.dev">Rhovas</a>, this looks like the following (which
+                    is what I've also been using in the examples):</p>
+<pre><span style="color: hsl(283, 39%, 53%)">db</span>.execute(<span class="has-text-danger">#sql {</span>
+    <span class="has-text-link">SELECT</span> * <span class="has-text-link">FROM</span> <span style="color: hsl(283, 39%, 53%)">users</span>
+    <span class="has-text-link">WHERE</span> <span style="color: hsl(283, 39%, 53%)">name</span> = <span class="has-text-danger">${</span><span style="color: hsl(283, 39%, 53%)">name</span><span class="has-text-danger">}</span>
+<span class="has-text-danger">}</span>);
+</pre>
+                <p>The <code class="has-text-dark">#</code> prefix is used to identify compile-time
+                    operations, like macros. When the parser reaches this point, it delegates to an
+                    <code class="has-text-dark">sql</code> parser for input within the braces.
+                    Finally, <code class="has-text-dark">${}</code> is used for interpolation, which
+                    delegates parsing back to Rhovas to handle the variable. The <code class="has-text-dark">sql</code>
+                    DSL can then convert this to a prepared statement for use at runtime.</p>
+                <p>If you're interested in implementation details, see the <a href="https://ufdc.ufl.edu/AA00082326/00001/citation">full thesis</a>.
+                    There's a lot more information about how everything works, as well as a neat
+                    tie-in with pattern matching in Elixir.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="future-work" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#future-work">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Future Work</span>
+                        </h3>
+                    </div>
+                </div>
+                <p>There are a few other areas to explore moving forward:</p>
+                <ul>
+                    <li>Syntax macros with arguments (like <code class="has-text-dark">#regex(:pcre) { ... }</code>),
+                        which conflicts with the syntax for regular macros and trailing lambdas.</li>
+                    <li>Rules for managing control flow, scope, errors, and other effects, helping
+                        to isolate the DSL from having unexpected impact on the rest of the code.</li>
+                    <li>A dedicated API for creating syntax macros, as currently a new parser needs
+                    to be created and manually integrated into the Rhovas compiler.</li>
+                </ul>
+                <p>These are all tricky problems that will take some time to solve, but as I
+                    continue working on Rhovas I hope to make good progress with them. Keep an eye
+                    on the <code class="has-text-dark">#rhovas</code> channel in my <a href="https://discord.gg/gm96xd8">Discord</a>
+                    for updates!</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h2 id="closing-thoughts" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#closing-thoughts">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Closing Thoughts...</span>
+                        </h2>
+                    </div>
+                </div>
+                <p>Syntax macros are a new model for implementing embedded DSLs that can extend the
+                    grammar of the host language, allowing different syntax to be used for the DSL.
+                    A generalized system of interpolation further allows DSLs to better integrate
+                    with the host language.</p>
+                <p>Feel free to reach out with questions or comments, and I'd love to hear feedback
+                    on this system and any insight into the points in future work.</p>
+                <ul>
+                    <li>Email: <code class="has-text-dark">WillBAnders@gmail.com</code></li>
+                    <li><a href="https://discord.gg/gm96xd8" rel="nofollow">Discord</a>: Tag me in the <code class="has-text-dark">#blog</code> channel!</li>
+                </ul>
+                <p style="width: 100%; text-align: center">Thanks for reading!<br> <em>~Blake Anderson</em></p>
+                <p>P.S. Happy 3<sup>rd</sup> Anniversary Rhovas 🎉</p>
+            </article>
+            <div class="dropdown-divider" style="margin-top: 16px"></div>
+        </div>
+    </section>
+</body>
+</html>
