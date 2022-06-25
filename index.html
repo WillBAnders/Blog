@@ -61,6 +61,58 @@
             <article class="content">
                 <div class="level">
                     <div class="level-left">
+                        <h2 id="semantic-analysis-abstractions" class="level-item title is-size-3" style="margin: 0">
+                            <a href="./articles/semantic-analysis-abstractions.html">Semantic Analysis Abstractions</a>
+                        </h2>
+                    </div>
+                    <div class="level-right" style="margin: 0">
+                        <div class="level-item">
+                            <div class="is-hidden-mobile has-text-right" style="display: block; line-height: 1.25rem;">
+                                <span class="is-size-5">June 25, 2022</span><br>
+                                <span class="is-size-6"><em>~11m read time</em></span>
+                            </div>
+                            <div class="is-hidden-tablet has-text-centered" style="display: block; margin-top: 0.5rem; line-height: 1.25rem;">
+                                <span class="is-size-5">June 25, 2022</span><br>
+                                <span class="is-size-6"><em>~11m read time</em></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p>In my last post, I introduced the idea of <a href="introducing-syntax-macros.html">syntax macros</a>
+                    for parsing embedded domain-specific languages (DSLs) like regex, SQL, and HTML. DSLs are an
+                    excellent tool for modeling many types of specialized problems, and improving language-level support
+                    for them is something I'm hoping to achieve in my own programming language
+                    <a href="https://rhovas.dev">Rhovas</a>.</p>
+                <p>This time, I'm going to address the harder challenge of semantic analysis - variables/function
+                    resolution, <abbr title="A property of macro systems to ensure identifiers inside/outside a macro are kept separated">macro hygiene</abbr>,
+                    type checking, and so on. This process has two goals: transform the current AST of the
+                    DSL into a representation that is compatible with the host language, and perform any additional
+                    compile-time validation that would otherwise be lost during the transformation.</p>
+                <p>For example, the code belows shows an SQL DSL being transformed into a <code class="has-text-dark">PreparedStatement</code>.
+                    This process can also validate the interpolated <code class="has-text-dark">name</code> variable,
+                    both with the variable being defined and whether it has the appropriate type (presuming the database
+                    schema is available).</p>
+<pre class="notification"><span class="icon is-small has-text-success" style="position: absolute; top: 1rem; right: 1rem">
+  <i class="fas fa-2x fa-play-circle" style="cursor: pointer" onclick="openDemo('sql-dsl-transformation', this)"></i>
+</span><span style="color: hsl(283, 39%, 53%)">db</span>.execute(<span class="has-text-danger">#sql {</span>
+    <span class="has-text-link">SELECT</span> * <span class="has-text-link">FROM</span> <span style="color: hsl(283, 39%, 53%)">users</span>
+    <span class="has-text-link">WHERE</span> <span style="color: hsl(283, 39%, 53%)">name</span> = <span class="has-text-danger">${</span><span style="color: hsl(283, 39%, 53%)">name</span><span class="has-text-danger">}</span>
+<span class="has-text-danger">}</span>);
+<div id="demo/sql-dsl-transformation/output" class="is-hidden">
+<div class="notification is-success is-light"><button class="delete" onclick="closeDemo('sql-dsl-transformation')"></button><pre class="has-background-success-light" style="padding: 0"><span style="color: hsl(283, 39%, 53%)">db</span>.execute(<span class="has-text-danger">PreparedStatement</span>(
+    <span class="has-text-success-dark">"SELECT * FROM users WHERE name = ?"</span>,
+    [<span style="color: hsl(283, 39%, 53%)">name</span>],
+));
+</pre></div></div></pre>
+                <p>This article is a more approachable summary of my Master's Thesis that highlights key ideas and
+                    elaborates on points that presumed a background in programming languages. The full thesis is
+                    available through the <a href="https://ufdc.ufl.edu/UFE0058836/00001">UF Library Catalog</a>, and I
+                    believe it's pretty straightforward as far as academic papers go.</p>
+                <p style="width: 100%; text-align: center"><a href="./articles/semantic-analysis-abstractions.html">Continue reading...</a></p>
+            </article>
+            <article class="content">
+                <div class="level">
+                    <div class="level-left">
                         <h2 id="introducing-syntax-macros" class="level-item title is-size-3" style="margin: 0">
                             <a href="./articles/introducing-syntax-macros.html">Introducing Syntax Macros</a>
                         </h2>
@@ -138,3 +190,16 @@
     </section>
 </body>
 </html>
+<script>
+  function openDemo(id, button) {
+    button.style.setProperty("cursor", "wait");
+    setTimeout(() => {
+      button.style.setProperty("cursor", "pointer");
+      document.getElementById(`demo/${id}/output`).classList.remove("is-hidden");
+    }, 250);
+  }
+
+  function closeDemo(id) {
+    document.getElementById(`demo/${id}/output`).classList.add("is-hidden");
+  }
+</script>

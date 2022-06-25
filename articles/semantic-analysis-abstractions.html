@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Semantic Analysis Abstractions</title>
+    <meta name="description" content="New abstractions for analyzing embedded DSLs.">
+    <link rel="icon" type="image/png" href="../images/logo.png">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+    <script src="https://use.fontawesome.com/releases/v5.15.1/js/all.js"></script>
+</head>
+<body>
+    <section class="section">
+        <div class="container" style="max-width: 768px">
+            <div class="level" style="margin: 0">
+                <div class="level-left">
+                    <div class="level-item">
+                        <img src="../images/logo.png" alt="Logo" width="24" height="24" style="margin-right: 8px">
+                        <nav class="breadcrumb has-bullet-separator" style="margin: 0; display: inline-block" aria-label="breadcrumbs">
+                            <ul>
+                                <li><a href="https://willbanders.dev">WillBAnders</a></li>
+                                <li><a href="../">Blog</a></li>
+                                <li class="is-active"><a href="#" aria-current="page">Semantic Analysis Abstractions</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+                <div class="level-right" style="margin-top: 8px">
+                    <div class="level-item">
+                        <a class="button" href="https://github.com/WillBAnders">
+                            <span class="icon is-medium">
+                                <i class="fab fa-lg fa-github"></i>
+                            </span>
+                            <span>GitHub</span>
+                        </a>
+                        &nbsp
+                        <a class="button" href="https://discord.gg/gm96xd8">
+                            <span class="icon is-medium">
+                                <i class="fab fa-lg fa-discord"></i>
+                            </span>
+                            <span>Discord</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="dropdown-divider" style="margin-bottom: 16px"></div>
+            <article class="content">
+                <div class="level">
+                    <div class="level-left">
+                        <h1 id="semantic-analysis-abstractions" class="level-item title" style="margin: 0">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#semantic-analysis-abstractions">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Semantic Analysis Abstractions</span>
+                        </h1>
+                    </div>
+                    <div class="level-right" style="margin: 0">
+                        <div class="level-item">
+                            <div class="is-hidden-mobile has-text-right" style="display: block; line-height: 1.25rem;">
+                                <span class="is-size-5">June 25, 2022</span><br>
+                                <span class="is-size-6"><em>~11m read time</em></span>
+                            </div>
+                            <div class="is-hidden-tablet has-text-centered" style="display: block; margin-top: 0.5rem; line-height: 1.25rem;">
+                                <span class="is-size-5">June 25, 2022</span><br>
+                                <span class="is-size-6"><em>~11m read time</em></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p>In my last post, I introduced the idea of <a href="introducing-syntax-macros.html">syntax macros</a>
+                    for parsing embedded domain-specific languages (DSLs) like regex, SQL, and HTML. DSLs are an
+                    excellent tool for modeling many types of specialized problems, and improving language-level support
+                    for them is something I'm hoping to achieve in my own programming language
+                    <a href="https://rhovas.dev">Rhovas</a>.</p>
+                <p>This time, I'm going to address the harder challenge of semantic analysis - variables/function
+                    resolution, <abbr title="A property of macro systems to ensure identifiers inside/outside a macro are kept separated">macro hygiene</abbr>,
+                    type checking, and so on. This process has two goals: transform the current AST of the
+                    DSL into a representation that is compatible with the host language, and perform any additional
+                    compile-time validation that would otherwise be lost during the transformation.</p>
+                <p>For example, the code belows shows an SQL DSL being transformed into a <code class="has-text-dark">PreparedStatement</code>.
+                    This process also validates the interpolated <code class="has-text-dark">name</code> variable, both
+                    with the variable being defined and whether it has the appropriate type (presuming the database
+                    schema is available).</p>
+<pre class="notification"><span class="icon is-small has-text-success" style="position: absolute; top: 1rem; right: 1rem">
+  <i class="fas fa-2x fa-play-circle" style="cursor: pointer" onclick="openDemo('sql-dsl-transformation', this)"></i>
+</span><span style="color: hsl(283, 39%, 53%)">db</span>.execute(<span class="has-text-danger">#sql {</span>
+    <span class="has-text-link">SELECT</span> * <span class="has-text-link">FROM</span> <span style="color: hsl(283, 39%, 53%)">users</span>
+    <span class="has-text-link">WHERE</span> <span style="color: hsl(283, 39%, 53%)">name</span> = <span class="has-text-danger">${</span><span style="color: hsl(283, 39%, 53%)">name</span><span class="has-text-danger">}</span>
+<span class="has-text-danger">}</span>);
+<div id="demo/sql-dsl-transformation/output" class="is-hidden">
+<div class="notification is-success is-light"><button class="delete" onclick="closeDemo('sql-dsl-transformation')"></button><pre class="has-background-success-light" style="padding: 0"><span style="color: hsl(283, 39%, 53%)">db</span>.execute(<span class="has-text-danger">PreparedStatement</span>(
+    <span class="has-text-success-dark">"SELECT * FROM users WHERE name = ?"</span>,
+    [<span style="color: hsl(283, 39%, 53%)">name</span>],
+));
+</pre></div></div></pre>
+                <p>This article is a more approachable summary of my Master's Thesis that highlights key ideas and
+                    elaborates on points that presumed a background in programming languages. The full thesis is
+                    available through the <a href="https://ufdc.ufl.edu/UFE0058836/00001">UF Library Catalog</a>, and I
+                    believe it's pretty straightforward as far as academic papers go.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h2 id="dsl-transformations" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#dsl-transformations">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>DSL Transformations</span>
+                        </h2>
+                    </div>
+                </div>
+                <p>As part of semantic analysis, the first goal is to transform the AST of the DSL (which is custom due
+                    to syntax macros) into the AST of the host language. Many languages already support similar behavior
+                    through interpolation and macro systems, so the problem itself is pretty well-defined.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="interpolator-transformations" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#interpolator-transformations">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Interpolator Transformations</span>
+                        </h3>
+                    </div>
+                </div>
+                <p>The easiest way to implement a DSL is by transforming the DSL into a function call with a combination
+                    of string literals (DSL code) and interpolated arguments. Both <a href="https://docs.scala-lang.org/overviews/core/string-interpolation.html">Scala interpolators</a>
+                    and <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#tagged_templates">JavaScript tagged templates</a>
+                    are strong examples of this method.</p>
+                <p>The example below demonstrates this for SQL, which already uses string literals and such has an
+                    existing runtime to process that literal. Note the inclusion of newlines and the second literal
+                    argument, since ultimately the DSL becomes just a multiline string literal.</p>
+<pre class="notification"><span class="icon is-small has-text-success" style="position: absolute; top: 1rem; right: 1rem">
+  <i class="fas fa-2x fa-play-circle" style="cursor: pointer" onclick="openDemo('interpolator-transformation', this)"></i>
+</span><span class="has-text-danger">#sql {</span>
+    <span class="has-text-link">SELECT</span> * <span class="has-text-link">FROM</span> <span style="color: hsl(283, 39%, 53%)">users</span>
+    <span class="has-text-link">WHERE</span> <span style="color: hsl(283, 39%, 53%)">name</span> = <span class="has-text-danger">${</span><span style="color: hsl(283, 39%, 53%)">name</span><span class="has-text-danger">}</span>
+<span class="has-text-danger">}</span>
+<div id="demo/interpolator-transformation/output" class="is-hidden">
+<div class="notification is-success is-light"><button class="delete" onclick="closeDemo('interpolator-transformation')"></button><pre class="has-background-success-light" style="padding: 0"><span class="has-text-danger">Sql</span>(
+    <span style="color: hsl(283, 39%, 53%)">literals</span> = [<span class="has-text-success-dark">"SELECT * FROM users\nWHERE name = "</span>, <span class="has-text-success-dark">"\n"</span>],
+    <span style="color: hsl(283, 39%, 53%)">arguments</span> = [<span style="color: hsl(283, 39%, 53%)">name</span>],
+)
+</pre></div></div></pre>
+                <p>This approach is a great starting point for getting DSLs working quickly, especially when there's an
+                    existing runtime available (as is often the case with regex, SQL, and HTML) or any string processing
+                    is relatively trivial. However, these are ultimately still string literals and thus aren't really
+                    validating syntax or interpolated variables.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="host-ast-ir-transformations" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#host-ast-ir-transformations">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Host AST/IR Transformations</span>
+                        </h3>
+                    </div>
+                </div>
+                <p>After interpolators, the next step is to support compile-time validation. Using syntax macros, DSLs
+                    can be represented with a custom AST which then has to be lowered into the host language. This can
+                    be done by transforming to the host AST (before semantic analysis) or the host IR (after semantic
+                    analysis):</p>
+                <ul>
+                    <li>AST transformations are like rewriting the DSL using the host language's syntax. It's functional
+                        and conceptually straightforward, but because the AST is before semantic analysis the DSL must
+                        rely on the host language for any validation which can present issues with macro hygiene.</li>
+                    <li>IR transformation are the most powerful, and unlike the AST have access to contextual
+                        information like types which can be used for validation. Most macro systems in modern languages
+                        incorporate some degree of contextual information (generally scopes) like Racket, Rust, and
+                        Julia. Since the DSL performs its own validation, it can transform to simplified representations
+                        like string literals or use tricky optimizations while also ensuring type safety.</li>
+                </ul>
+                <p>AST transformations are convenient but a bit limiting. Instead, it's the ability to perform IR
+                    transformations that allow type checking that is most interesting, as that's what allows DSLs to
+                    support validation and strong error handling. The example below demonstrates how this can be used to
+                    typecheck HTML attributes:</p>
+<pre class="notification"><span class="icon is-small has-text-success" style="position: absolute; top: 1rem; right: 1rem">
+  <i class="fas fa-2x fa-play-circle" style="cursor: pointer" onclick="openDemo('html-attribute-typechecking', this)"></i>
+</span><span class="has-text-link">val</span> <span style="color: hsl(283, 39%, 53%)">id</span> = <span class="has-text-info">1</span>;
+<span class="has-text-danger">#html {</span>
+    &lt;<span class="has-text-link">h1</span> <span style="color: hsl(283, 39%, 53%)">id</span>=<span class="has-text-danger">${</span><span style="color: hsl(283, 39%, 53%)">id</span><span class="has-text-danger">}</span>&gt;<span class="has-text-success-dark">Hello, World!</span>&lt;<span class="has-text-link">/h1</span>&gt;
+<span class="has-text-danger">}</span>
+<div id="demo/html-attribute-typechecking/output" class="is-hidden">
+<div class="notification is-danger is-light"><button class="delete" onclick="closeDemo('html-attribute-typechecking')"></button><pre class="has-background-danger-light" style="padding: 0">Error: Invalid HTML attribute value.
+1 | #html {
+2 |     &lt;h1 id=${id}&gt;Hello, World!&lt;/h1&gt;
+  |              ^^
+An id attribute requires values to be type String, received Integer.
+</pre></div></div></pre>
+                <p>Note that the DSL here has access to type information from the host language that it can make use of,
+                    which is something that many existing macro systems don't offer - they rely on type checking
+                    <em>after</em> the transformation, which is more limiting and moves error handling outside the DSL
+                    (leading to errors akin to C++ templates).</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="other-macro-features" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#other-macro-features">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Other Macro Features</span>
+                        </h3>
+                    </div>
+                </div>
+                <p>There are two other key features of macro systems worth mentioning, since they have a major impact on
+                what is or is not possible with DSLs: </p>
+                <ul>
+                    <li>Hygiene, which ensures identifiers inside/outside the macro are kept separated. For DSLs, this
+                        means that the DSL itself must be analyzed in a distinct scope but interpolated arguments still
+                        have to be analyzed in the original called scope. There are also cases where DSLs actually want
+                        to break hygiene, such as defining variables that are also accessible outside the DSL.</li>
+                    <li>Splicing, which allows a macro to return a list of ASTs that are merged into the calling
+                        location (like spreading varargs or <code class="has-text-dark">Fragment</code> components in
+                        many webdev frameworks).</li>
+                </ul>
+                <p>For instance, both of these features can be used to allow a TypeScript DSL to define new variables
+                    accessible in the host language:</p>
+<pre class="notification"><span class="icon is-small has-text-success" style="position: absolute; top: 1rem; right: 1rem">
+  <i class="fas fa-2x fa-play-circle" style="cursor: pointer" onclick="openDemo('typescript-splicing-definitions', this)"></i>
+</span><span class="has-text-danger">#typescript {</span>
+    <span class="has-text-link">const</span> <span style="color: hsl(283, 39%, 53%)">x</span> = <span class="has-text-info">1</span>;
+    <span class="has-text-link">const</span> <span style="color: hsl(283, 39%, 53%)">y</span> = <span class="has-text-info">2</span>;
+    <span class="has-text-link">const</span> <span style="color: hsl(283, 39%, 53%)">z</span> = <span class="has-text-info">3</span>;
+<span class="has-text-danger">}</span>
+print(<span style="color: hsl(283, 39%, 53%)">x</span>, <span style="color: hsl(283, 39%, 53%)">y</span>, <span style="color: hsl(283, 39%, 53%)">z</span>);
+<div id="demo/typescript-splicing-definitions/output" class="is-hidden">
+<div class="notification is-success is-light"><button class="delete" onclick="closeDemo('typescript-splicing-definitions')"></button><pre class="has-background-success-light" style="padding: 0"><span class="has-text-link">val</span> <span style="color: hsl(283, 39%, 53%)">x</span> = <span class="has-text-info">1</span>;
+<span class="has-text-link">val</span> <span style="color: hsl(283, 39%, 53%)">y</span> = <span class="has-text-info">2</span>;
+<span class="has-text-link">val</span> <span style="color: hsl(283, 39%, 53%)">z</span> = <span class="has-text-info">3</span>;
+print(<span style="color: hsl(283, 39%, 53%)">x</span>, <span style="color: hsl(283, 39%, 53%)">y</span>, <span style="color: hsl(283, 39%, 53%)">z</span>);
+</pre></div></div></pre>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h2 id="context-analysis" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#context-analysis">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Context Analysis</span>
+                        </h2>
+                    </div>
+                </div>
+                <p>The second goal of semantic analysis is to perform the analysis itself, aka compile-time validation.
+                    To implement this, the analyzer manages state identifying context-sensitive information about the
+                    program - things like variable/function scopes, labels, and control flow. This information is
+                    modified as analysis progress (thus, mutable state) and DSLs generally need to access/modify this
+                    information for things like typechecking.</p>
+                <p>Modeling this kind of data is not easy, but the solution I've come up with I call the Push-Pull
+                    Context System and has worked surprisingly well for me in practice. Not only is useful for DSLs, but
+                    even just for Rhovas itself I've found it to be a successful model that makes it easier to keep
+                    track of this mutable state.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="push-pull-context-system" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#push-pull-context-system">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Push-Pull Context System</span>
+                        </h3>
+                    </div>
+                </div>
+                <p>The primary challenge for managing context is supporting conditional branching, as with <code class="has-text-dark">if</code>
+                    /<code class="has-text-dark">match</code> statements. There are two considerations here:</p>
+                <ul>
+                    <li>Each branch must be analyzed in a separate child context. This context is initially the same for
+                        each branch, and any updates to contextual information that occur need to be kept separate from
+                        the context of other branches.</li>
+                    <li>After each branch is analyzed, any updates to contextual information must be merged and then
+                        applied to the parent context to be used for later analysis.</li>
+                </ul>
+                <p>The context system is designed around modeling these operations as either <em>pushing</em> data from
+                    the parent context to a child context or <em>pulling</em> data from all children to the parent
+                    (merging as appropriate). The <code class="has-text-dark">ContextItem</code> interface defines these
+                    two operations as <code class="has-text-dark">child</code> (push) and <code class="has-text-dark">merge</code>
+                    (pull). An example implementation for tracking labels is shown below using two sets, one for
+                    available labels from the parent and another for accessed labels that is merged via union.</p>
+<pre>
+<span class="has-text-link">data class</span> <span class="has-text-danger">LabelContext</span>(
+    <span class="has-text-link">val</span> <span style="color: hsl(283, 39%, 53%)">available</span>: <span class="has-text-danger">MutableSet</span>&lt;<span class="has-text-danger">String</span>&gt;,
+    <span class="has-text-link">val</span> <span style="color: hsl(283, 39%, 53%)">accessed</span>: <span class="has-text-danger">MutableSet</span>&lt;<span class="has-text-danger">String</span>&gt;,
+) : <span class="has-text-danger">ContextItem</span>&lt;<span class="has-text-danger">LabelContext</span>&gt; {
+
+    <span class="has-text-link">fun</span> child(): <span class="has-text-danger">LabelContext</span> {
+        return <span class="has-text-danger">LabelContext</span>(<span style="color: hsl(283, 39%, 53%)">available</span>.toMutableSet(), setOf());
+    }
+
+    <span class="has-text-link">fun</span> merge(<span style="color: hsl(283, 39%, 53%)">children</span>: <span class="has-text-danger">List</span>&lt;<span class="has-text-danger">LabelContext</span>&gt;) {
+        <span style="color: hsl(283, 39%, 53%)">children</span>.forEach { <span style="color: hsl(283, 39%, 53%)">child</span> ->
+            <span style="color: hsl(283, 39%, 53%)">accessed</span>.addAll(<span style="color: hsl(283, 39%, 53%)">child</span>.<span style="color: hsl(283, 39%, 53%)">accessed</span>);
+        }
+    }
+
+}
+</pre>
+                <p>Labels are a simple example as they fit the push-pull model cleanly, but I also want to show how this
+                    system can be used to model control flow which is much more sophisticated with merging.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="control-flow-context" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#scope-context">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Control Flow Context</span>
+                        </h3>
+                    </div>
+                </div>
+                <p>The primary challenges of tracking control flow are conditional evaluation and jumps. Conditional
+                    evaluation involves managing control flow across multiple branches and requires a method of merging
+                    these contexts. Similarly, jumps may occur manually through statements or also as the result of
+                    thrown exceptions.
+                <p>For manual jumps, the approach used by Rhovas is to store a set of possible targets (labels) that can
+                    be jumped to within a given block. Statements that cause jumps add the appropriate label to the set
+                    while those that are possible targets clear the set if it contains the corresponding label. When
+                    conditional branches are merged, each set is unioned together unless one of the sets is empty
+                    (corresponding to normal control flow) in which case the set is cleared and normal control flow
+                    resumes. This merge algorithm is shown below:</p>
+<pre>
+<span class="has-text-link">val</span> <span style="color: hsl(283, 39%, 53%)">jumps</span>: <span class="has-text-danger">MutableSet</span>&lt;<span class="has-text-danger">String</span>&gt;,
+<span class="has-text-link">fun</span> merge(<span style="color: hsl(283, 39%, 53%)">children</span>: <span class="has-text-danger">List</span>&lt;<span class="has-text-danger">JumpContext</span>&gt;) {
+    <span class="has-text-link">if</span> (<span style="color: hsl(283, 39%, 53%)">children</span>.any { <span style="color: hsl(283, 39%, 53%)">it</span>.<span style="color: hsl(283, 39%, 53%)">jumps</span>.isEmpty() }) {
+        <span style="color: hsl(283, 39%, 53%)">jumps</span>.clear();
+    } <span class="has-text-link">else</span> {
+        <span style="color: hsl(283, 39%, 53%)">children</span>.forEach { <span style="color: hsl(283, 39%, 53%)">jumps</span>.addAll(<span style="color: hsl(283, 39%, 53%)">it</span>.<span style="color: hsl(283, 39%, 53%)">jumps</span>);
+    }
+}
+</pre>
+                <p>Exceptions are significantly harder due to their power (they can come from any function call, not
+                    just statements) and use of types. It's a bit out of scope for this summary post, but if you're
+                    interested you can review the <a href="https://ufdc.ufl.edu/UFE0058836/00001">full thesis</a> and
+                    the <a href="https://github.com/Rhovas/Interpreter/commit/43b2e04585189d37854e7caff53339339ddb80fe">Rhovas implementation</a>
+                    (at time of writing) as well.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h2 id="future-work" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#future-work">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Future Work</span>
+                        </h2>
+                    </div>
+                </div>
+                <p>There are a few other areas to explore moving forward:</p>
+                <ul>
+                    <li>A user-facing macro system for creating embedded DSLs without interfacing directly with the
+                        compiler. This also includes defining a series of standard macros for common operations, such as
+                        creating ASTs/IRs, which will remove large amounts of the semantic analysis burden from the
+                        DSLs.</li>
+                    <li>The limitations of the push-pull context system, such as Java's 'effectively final' validation
+                        for variables accessed in lambda expressions and forward context changes into the catch block
+                        when exceptions are thrown. Both appear to require a method of long-term tracking and storage of
+                        the context that is not affected by context changes as semantic analysis progresses.</li>
+                    <li>Integrating this model with other language standards such as the Language Server Protocol or
+                        LLVM to allow DSLs to employ existing compiler toolchains and backends to manage most of the
+                        work. However, these models are not designed for DSLs, and thus functionality like interpolated
+                        arguments and contextual information present challenges that likely require significant
+                        workarounds.</li>
+                </ul>
+                <p>These are all tricky problems that will take some time to solve, but as I continue working on Rhovas
+                    I hope to make good progress with them. Keep an eye on the <code class="has-text-dark">#rhovas</code>
+                    channel in my <a href="https://discord.gg/gm96xd8">Discord</a> for updates!</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h2 id="closing-thoughts" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#closing-thoughts">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Closing Thoughts...</span>
+                        </h2>
+                    </div>
+                </div>
+                <p>The process of semantic analysis is hard enough for one language, let alone trying to work with
+                    embedded DSLs. The abstractions introduced above have already been successfully used in <a href="https://rhovas.dev">Rhovas</a>,
+                    the language I work on, and can also provide benefits for other general-purpose languages for their
+                    own semantic analysis.</p>
+                <p>If you're interested in the more in-depth version, definitely take a look at the <a href="https://ufdc.ufl.edu/UFE0058836/00001">full thesis</a>
+                    for additional details, examples, and edge cases left out for this post. The main paper is about 20
+                    pages double-spaced and is pretty approachable with some background knowledge in programming
+                    languages and macros.</p>
+                <p>Feel free to reach out with questions or comments, and I'd love to hear feedback
+                    on this system and any insight into the points in future work.</p>
+                <ul>
+                    <li>Email: <code class="has-text-dark">WillBAnders@gmail.com</code></li>
+                    <li><a href="https://discord.gg/gm96xd8" rel="nofollow">Discord</a>: Tag me in the <code class="has-text-dark">#blog</code> channel!</li>
+                </ul>
+                <p style="width: 100%; text-align: center">Thanks for reading!<br> <em>~Blake Anderson</em></p>
+            </article>
+            <div class="dropdown-divider" style="margin-top: 16px"></div>
+        </div>
+    </section>
+</body>
+</html>
+<script>
+  function openDemo(id, button) {
+    button.style.setProperty("cursor", "wait");
+    setTimeout(() => {
+      button.style.setProperty("cursor", "pointer");
+      document.getElementById(`demo/${id}/output`).classList.remove("is-hidden");
+    }, 250);
+  }
+
+  function closeDemo(id) {
+    document.getElementById(`demo/${id}/output`).classList.add("is-hidden");
+  }
+</script>
