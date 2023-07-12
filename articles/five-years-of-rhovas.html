@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Five Years of Rhovas</title>
+    <meta name="description" content="Reflecting back on five years of development on Rhovas...">
+    <link rel="icon" type="image/png" href="../images/logo.png">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+    <script src="https://use.fontawesome.com/releases/v5.15.1/js/all.js"></script>
+</head>
+<body>
+    <section class="section">
+        <div class="container" style="max-width: 768px">
+            <div class="level" style="margin: 0">
+                <div class="level-left">
+                    <div class="level-item">
+                        <img src="../images/logo.png" alt="Logo" width="24" height="24" style="margin-right: 8px">
+                        <nav class="breadcrumb has-bullet-separator" style="margin: 0; display: inline-block" aria-label="breadcrumbs">
+                            <ul>
+                                <li><a href="https://willbanders.dev">WillBAnders</a></li>
+                                <li><a href="../">Blog</a></li>
+                                <li class="is-active"><a href="#" aria-current="page">Five Years of Rhovas</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+                <div class="level-right" style="margin-top: 8px">
+                    <div class="level-item">
+                        <a class="button" href="https://github.com/WillBAnders">
+                            <span class="icon is-medium">
+                                <i class="fab fa-lg fa-github"></i>
+                            </span>
+                            <span>GitHub</span>
+                        </a>
+                        &nbsp
+                        <a class="button" href="https://discord.gg/gm96xd8">
+                            <span class="icon is-medium">
+                                <i class="fab fa-lg fa-discord"></i>
+                            </span>
+                            <span>Discord</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="dropdown-divider" style="margin-bottom: 16px"></div>
+            <article class="content">
+                <div class="level">
+                    <div class="level-left">
+                        <h1 id="five-years-of-rhovas" class="level-item title" style="margin: 0">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#five-years-of-rhovas">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Five Years of Rhovas</span>
+                        </h1>
+                    </div>
+                    <div class="level-right" style="margin: 0">
+                        <div class="level-item">
+                            <div class="is-hidden-mobile has-text-right" style="display: block; line-height: 1.25rem;">
+                                <span class="is-size-5">July 11, 2023</span><br>
+                                <span class="is-size-6"><em>~10m read time</em></span>
+                            </div>
+                            <div class="is-hidden-tablet has-text-centered" style="display: block; margin-top: 0.5rem; line-height: 1.25rem;">
+                                <span class="is-size-5">July 11, 2023</span><br>
+                                <span class="is-size-6"><em>~10m read time</em></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p>Today marks the 5th anniversary of Rhovas! Five years ago, I outlined the first steps for what I
+                    wanted to create with a new programming language. Rhovas has come quite far from those original
+                    notes, so I thought it'd be a good idea to reflect a bit on the past five years and see how things
+                    have gone.</p>
+                <p>Additionally, to commemorate the day Rhovas now has an initial <code class="has-text-dark">v0.0.1</code>
+                    release! This is largely to know what's active on the online editor, but over time this will
+                    approach a full <code class="has-text-dark">v1</code> release and come with more compatibility
+                    guarantees. You can review the <a href="https://github.com/Rhovas/Interpreter/releases/tag/v0.1.2">Release Notes</a>
+                    for a changelog and details on our versioning approach.</p>
+                <p>Finally, in combination with this release I've updated contributing guidelines to show issues (and
+                    PRs) are now accepted. I'm comfortable with the current direction of the language/compiler where
+                    contributions are manageable, and the language is stable enough where building programs and
+                    identifying bugs is highly valuable. If you're interested in helping, see <a href="#how-can-i-help">FAQ: How can I help?</a>.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h2 id="how-far-weve-come" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#how-far-weve-come">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>How Far We've Come</span>
+                        </h2>
+                    </div>
+                </div>
+                <p>A lot has changed over the past few years since the initial work on Rhovas. Since technically every
+                    feature is new, I think it's worth narrowing in on what's changed in the language design and how the
+                    compiler has evolved since the early days of Rhovas.</p>
+                <p>First up, language design. Honestly not too much has actually been changed here in my opinion (which
+                    is probably because I'm still playing catch-up with the compiler and many features are still
+                    unimplemented). Still, here's a few notable mentions:</p>
+                <ul>
+                    <li>Error handling with both exceptions and results has turned out much better than I expected,
+                        though still needs a real trial-by-fire.</li>
+                    <li>First-class types have grown on me and feel very nice with <code class="has-text-dark">is</code>/<code class="has-text-dark">as</code>/<code class="has-text-dark">to</code>.</li>
+                    <li>Similarly, functional forms like <code class="has-text-dark">as</code>/<code class="has-text-dark">if</code>
+                        help with chaining and has led to me favoring suffix operations and more fluent styles.</li>
+                    <li>Pattern matching received a big overhaul that included support for types, varargs, and
+                        predicates, plus a more generalized system that extends well to other types of data. I've also
+                        moved towards allowing pattern matching for all declarations, not just in match statements.</li>
+                    <li>Function overloading is now supported with stronger rules for 'safe' overloads (requiring
+                        disjoint types to avoid potential conflicts).</li>
+                    <li>Constructors now have a <code class="has-text-dark">this { ... }</code> initializer which
+                        improves ease of use and resolves problems between initialization order and inheritance.</li>
+                    <li>Macros have been added, and syntax macros in particular have played a large role in steering the
+                        API design of the language towards enabling DSL support.</li>
+                </ul>
+                <p>And secondly, the compiler. The current compiler was started just under two years ago and was at
+                    <i>least</i> the 7th or 8th attempt. Since then, my approach has significantly changed and I've
+                    worked my way through a lot of problems that I could never figure out at the time:</p>
+                <ul>
+                    <li>ANTLR has been replaced by a handwritten recursive descent parser. This has been far faster to
+                        work with, allows more functionality like syntax macros and better error handling, and is
+                        overall easier to understand in my opinion.</li>
+                    <li>Static analysis (and consequently type checking) now exists! The new context system has played a
+                        huge role in enabling this, and I continue to learn more about implementing type systems and am
+                        slowly chipping away at bugs there. The current type system supports generics (including
+                        variance) and tuples/structs, but I haven't quite gotten to union/intersection types.</li>
+                    <li>There's now a standard library which is sufficient for implementing many leetcode-style programs
+                        (which has also led to Rhovas being added to RosettaCode). Time will tell if designing this from
+                        scratch was worthwhile (probably not), but this allows creating some practical programs.</li>
+                    <li>The compiler now supports Kotlin multiplatform to allow both JVM and JS targets, which is what
+                        allows the <a href="https://rhovas.dev/editor/">Online Editor</a> to function. This has been a
+                        major improvement for enabling others to test out Rhovas and I even use it myself at times.</li>
+                </ul>
+                <p>While there's still a lot to do (more on that later), I think this has been a great start and the
+                    majority of this has been accomplished in just the last year or two. Additionally, there's a lot of
+                    contextual knowledge and experience I've accumulated over that time as well, which I think is worth
+                    a section on it's own...</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h2 id="words-of-advice" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#words-of-advice">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Words of Advice</span>
+                        </h2>
+                    </div>
+                </div>
+                <p>It'd be foolish to reflect on the past without calling out places for improvement, so here's a few
+                    words of advice moving forward I've picked up over the years. Note this is written more for future
+                    me rather than being general advice, so YMMV.</p>
+                <p>First, do <i>something</i>. A little bit of progress is always forward motion and over time will add
+                    up. Consequently, not everything has to be a large project or finished 'on time' - it's fine to take
+                    breaks every now and then. However, don't confuse taking a break with procrastinating because you
+                    don't know where to start!</p>
+                <p>In relation to Rhovas specifically, try to prioritize core language features rather than handling
+                    every edge case (including optimizing the software design of the compiler). This helps with making
+                    progress above (which in turn aids motivation) and the faster the language becomes usable the faster
+                    the feedback cycle is for ideation and bugfixes. Furthermore, the first attempt will always have a
+                    few quirks - it's more important that the code can be refactored later, and keeping strong test
+                    coverage around those new features will help with that in the future. In short, focus on
+                    implementing known use cases that are limiting rather than aiming for completion of some area.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h2 id="so-whats-next" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#so-whats-next">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>So What's Next?</span>
+                        </h2>
+                    </div>
+                </div>
+                <p>It seems only fitting to end with what's next. To start, here's a few larger projects planned for the
+                    next few months:</p>
+                <ul>
+                    <li>Inheritance, along with the ability to create interfaces. As a more object-oriented language
+                        this is a key part for being able to create useful abstractions, plus interfaces alone open up
+                        many more possibilities compared to class inheritance.</li>
+                    <li>Modularity, specifically the ability to compile multiple files and support namespacing between
+                        packages of a project. Needless to say, also important for larger projects.</li>
+                    <li>Standard Library 2 (Electric Boogaloo), to fill in many of the limitations of the current
+                        standard library. The largest feature missing is file/network IO, which allows communicating
+                        with external services and makes Rhovas much more viable for small scripting projects.</li>
+                </ul>
+                <p>I hesitate to set plans too far in the future, but here are some of the 'nice-to-have' ideas that I'd
+                    like to see sooner rather than later.</p>
+                <ul>
+                    <li>Mutability! This was one of the original goals of Rhovas and it's a shame it's taken so long to
+                        tackle.</li>
+                    <li>
+                        Finish documentation for language features and the standard library. The existing documentation
+                        only covers a portion of language features and hasn't been updated recently, and there's nothing
+                        for the standard library yet.
+                        <ul>
+                            <li>Related, a more structured tutorial/showcase would be really cool but probably isn't
+                                worth it in the foreseeable future.</li>
+                        </ul>
+                    </li>
+                    <li>A Language-Server-Protocol (LSP) integration, which allows editor functionality like
+                        autocomplete, go-to definition, and other dynamic behavior. In theory, this should be possible
+                        to hook up to the online editor at some point as well.</li>
+                    <li>Integration with JS/JVM environments for compilation and standard libraries. Having access to
+                        Kotlin libraries (for instance) resolves most of the issues with standard library limitations.
+                        This is something I've experimented with multiple times but never really got working (main
+                        problems are scope/resolution differences and preserving correctness for static analysis).</li>
+                </ul>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h2 id="closing-thoughts" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#closing-thoughts">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Closing Thoughts...</span>
+                        </h2>
+                    </div>
+                </div>
+                <p>I think that brings my reflection on the first five years to a close. It's been a lot of work to get
+                    here, and while there's still a lot left to do the language is in a far better state. Hopefully the
+                    next couple months will see some of the remaining core features come to light, and then I can
+                    finally start working on some real software projects in Rhovas!</p>
+                <p>As a small bonus, I've also added a brief FAQ section after this with some common questions I get
+                    asked (and a few fun ones). Take a look if you're interested, especially if <a href="#how-can-i-help">you'd like to help!</a></p>
+                <p>Here's to five more years of Rhovas!</p>
+                <ul>
+                    <li>Email: <code class="has-text-dark">WillBAnders@gmail.com</code></li>
+                    <li><a href="https://discord.gg/gm96xd8" rel="nofollow">Discord</a>: Tag me in the <code class="has-text-dark">#blog</code> (or <code class="has-text-dark">#rhovas</code>) channel!</li>
+                </ul>
+                <p style="width: 100%; text-align: center">Thanks for reading!<br> <em>~Blake Anderson</em></p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h2 id="faq" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#faq">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>FAQ</span>
+                        </h2>
+                    </div>
+                </div>
+                <p>Here's a handful of frequently-asked questions I tend to get, just for a bit of fun!</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="why-create-a-new-language" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#why-create-a-new-language">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Why create a new language?</span>
+                        </h3>
+                    </div>
+                </div>
+                <p>In short, I wanted to address common software development problems (particularly around API design
+                    and maintainability) and a language/ecosystem level solution seems like the best option. Rhovas
+                    already includes a few novel solutions for language design (such as <a href="introducing-syntax-macros.html">syntax macros</a>)
+                    and there's much more I'd like to tackle. Of course, this is also been a learning experience and I'm
+                    a lot more comfortable with other languages having researched a wide variety already.</p>
+                <p>The <a href="https://rhovas.dev/learn/motivation">Motivation</a> section of the Rhovas docs go into a
+                    bit more detail here, along with the problem statement which I call the Theory of Software APIs.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="whats-your-favorite-part" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#whats-your-favorite-part">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>What's your favorite part?</span>
+                        </h3>
+                    </div>
+                </div>
+                <p>I think there's two ways to interpret this question:</p>
+                <ul>
+                    <li>Favorite part of building of a language? Definitely seeing something work for the first time;
+                        it's incredibly satisfying to finally have a feature usable that has been just an idea for
+                        years. Seeing others experiment with that feature as well is really exciting too.</li>
+                    <li>Favorite part of Rhovas? I think pipelining is probably the best-designed feature; it solves
+                        multiple problems and is quite seamless. Honorable mentions go to syntax macros for embedded
+                        DSLs (which I've written a lot about) and exception-result isomorphism (still surprised this
+                        even works).</li>
+                </ul>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="whats-your-least-favorite-part" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#whats-your-least-favorite-part">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>What's your <i>least</i> favorite part?</span>
+                        </h3>
+                    </div>
+                </div>
+                <p>Anything with the type system, hands down. It's only a couple lines of code (mostly boilerplate) but
+                    the logic itself is incredibly complex. I often have to dig into problems for a while to convince
+                    myself whether something is an issue or things are actually working as intended with how different
+                    types interact.</p>
+                <p>Aside from that, having so many ideas that are still unimplemented is also a bit disappointing. It'd
+                    be great if I could experiment with the features I want to, but the implementation is so far away
+                    that it makes any further language design work largely speculative. Some day!</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="whats-the-biggest-accomplishment" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#whats-the-biggest-accomplishment">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>What's the biggest accomplishment? (so far)</span>
+                        </h3>
+                    </div>
+                </div>
+                <p>The online editor was a huge step forward for allowing others to try Rhovas without having to install
+                    the whole compiler. The whole repository had to be converted to a Kotlin multiplatform projects, and
+                    there were <i>a lot</i> of JS compiler bugs to work around. This also let into the Kotest refactor
+                    (which was a huge project in its own right) since JUnit only works with JVM, not JS.</p>
+                <p>Honorable mentions go to the Analyzer's context system, which opened the door for more advanced
+                    semantic analysis, followed by the recent improvements to test coverage, which has helped catch a
+                    lot of bugs and avoid many new ones.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="how-many-lines-of-code-is-the-compiler" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#how-many-lines-of-code-is-the-compiler">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>How many lines of code is the compiler?</span>
+                        </h3>
+                    </div>
+                </div>
+                <p>Might as well cover some other stats while we're at it. At time of writing, there are:</p>
+                <ul>
+                    <li><code class="has-text-dark">244</code> commits (around <code class="has-text-dark">3</code>/week)</li>
+                    <li><code class="has-text-dark">13,405</code> lines of Kotlin (and <code class="has-text-dark">99</code> lines of Rhovas)</li>
+                    <li><code class="has-text-dark">1,178</code> unique tests (each runs on JVM and JS)</li>
+                    <li><code class="has-text-dark">12</code> GitHub stars (but who cares? haha <a href="https://github.com/Rhovas/Interpreter/stargazers">pls star thx</a>)</li>
+                    <li>A questionably large number of hours I could have spent doing anything else</li>
+                </ul>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="wheres-the-logo-mascot" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#wheres-the-logo-mascot">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>Where's the logo/mascot?</span>
+                        </h3>
+                    </div>
+                </div>
+                <p>Haven't gotten that far? I've toyed around with ideas but nothing has really stood out yet. I
+                    typically use a scorpion for my Rhovas religion in Civilization VI, so I guess that's the closest
+                    we've been.</p>
+                <div class="level is-mobile" style="margin: 0">
+                    <div class="level-left">
+                        <h3 id="how-can-i-help" class="level-item title">
+                            <span class="icon is-medium" style="margin-right: 0.25rem">
+                                <a href="#how-can-i-help">
+                                    <i class="fas fa-sm fa-link" style="padding-bottom: 0.25rem"></i>
+                                </a>
+                            </span>
+                            <span>How can I help?</span>
+                        </h3>
+                    </div>
+                </div>
+                <p>Writing Rhovas programs! In all seriousness, this is one of the best ways to help progress the
+                    language. Not only does it help find bugs and assist with prioritization, it's also helps with
+                    motivation for me to get you unblocked on whatever you're working on. If you don't have any ideas,
+                    Rhovas has a series of tests based on RosettaCode solutions and there's plenty of those available to
+                    try!</p>
+                <p>If you're more interested in the language design or compiler side, you can see if any of the GitHub
+                    issues stand out as something your interested in. If you have another idea in mind, feel free to
+                    discuss with me over Discord as well.</p>
+            </article>
+            <div class="dropdown-divider" style="margin-top: 16px"></div>
+        </div>
+    </section>
+</body>
+</html>
